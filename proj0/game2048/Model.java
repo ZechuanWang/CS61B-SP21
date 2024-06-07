@@ -5,7 +5,7 @@ import java.util.Observable;
 
 
 /** The state of a game of 2048.
- *  @author TODO: YOUR NAME HERE
+ *  @author Zechuan Wang
  */
 public class Model extends Observable {
     /** Current contents of the board. */
@@ -113,12 +113,61 @@ public class Model extends Observable {
         // TODO: Modify this.board (and perhaps this.score) to account
         // for the tilt to the Side SIDE. If the board changed, set the
         // changed local variable to true.
-
+        int size_col = this.board.size();
+        this.board.setViewingPerspective(side);
+        for(int i = size_col - 1; i >= 0; i--){
+            if(mergeCol(i)){
+                changed = true;
+            }
+        }
+        this.board.setViewingPerspective(Side.NORTH);
         checkGameOver();
         if (changed) {
             setChanged();
         }
         return changed;
+    }
+    /**return the value in desired (col, row)*/
+    public int getValue(int col, int row){
+        if(this.board.tile(col, row) != null){
+            return this.board.tile(col, row).value();
+        }else{
+            return 0;
+        }
+    }
+    /**deal the single colum for up
+     * return true if moved or merged.*/
+    public boolean mergeCol(int col){
+        boolean moved = false;
+        int idx = this.board.size() - 1;
+        while(idx > 0){
+            int r = -1;
+            for(int i = idx - 1; i >= 0; i--){
+                if(getValue(col, i) != 0){
+                    r = i;
+                    break;
+                }
+            }
+            if(r == -1){ // whole colum is empty, just break
+                break;
+            }
+            if(getValue(col, idx) == 0){ // current (col, row) is empty, find the next non-empty position
+                Tile tmp = this.board.tile(col, r);
+                this.board.move(col, idx,tmp);
+                moved = true;
+            }else{ // current position is not empty, find the next non-empty position
+                if(getValue(col, idx) == getValue(col, r)){ //can merge
+                    Tile tmp = this.board.tile(col, r);
+                    moved = true;
+                    this.score += 2 * getValue(col, idx);
+                    this.board.move(col, idx, tmp);
+                    idx--;
+                }else{
+                    idx--;
+                }
+            }
+        }
+        return moved;
     }
 
     /** Checks if the game is over and sets the gameOver variable
@@ -137,7 +186,11 @@ public class Model extends Observable {
      *  Empty spaces are stored as null.
      * */
     public static boolean emptySpaceExists(Board b) {
-        // TODO: Fill in this function.
+        for(int i = 0; i < b.size(); i++){
+            for(int j = 0; j < b.size(); j++){
+                if(b.tile(i, j) == null) return true;
+            }
+        }
         return false;
     }
 
@@ -147,7 +200,14 @@ public class Model extends Observable {
      * given a Tile object t, we get its value with t.value().
      */
     public static boolean maxTileExists(Board b) {
-        // TODO: Fill in this function.
+
+        for(int i = 0; i < b.size(); i++){
+            for(int j = 0; j < b.size(); j++){
+                if(b.tile(i,j) != null){
+                    if(b.tile(i, j).value() == MAX_PIECE) return true;
+                }
+            }
+        }
         return false;
     }
 
@@ -157,8 +217,32 @@ public class Model extends Observable {
      * 1. There is at least one empty space on the board.
      * 2. There are two adjacent tiles with the same value.
      */
+    /**Helper function to check if there are two adjacent tiles in one row*/
+    public static boolean checkRow(Board b, int row){
+        for(int i = 1; i < b.size(); i++){
+            if(b.tile(row, i) != null  && b.tile(row, i - 1) != null){
+                if(b.tile(row, i).value() == b.tile(row, i - 1).value()) return true;
+            }
+        }
+        return false;
+    }
+    /**Helper function to check if there are two adjacent tiles in one col*/
+    public static boolean checkCol(Board b, int col){
+        for(int i = 1; i < b.size(); i++){
+            if(b.tile(i, col) != null  && b.tile(i - 1, col) != null){
+                if(b.tile(i, col).value() == b.tile(i - 1, col).value()) return true;
+            }
+        }
+        return false;
+    }
     public static boolean atLeastOneMoveExists(Board b) {
         // TODO: Fill in this function.
+        if(emptySpaceExists(b)) return true;
+        int size_b = b.size();
+        for(int i = 0; i < size_b; i++){
+            if(checkRow(b, i)) return true;
+            if(checkCol(b, i)) return true;
+        }
         return false;
     }
 
