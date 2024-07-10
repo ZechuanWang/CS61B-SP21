@@ -26,7 +26,7 @@ public class TimeAList {
         int initialN = 1000;
         AList<Integer> Ns = new AList<>();
         AList<Double> times = new AList<>();
-        while(initialN <= 128000 * 2 * 2){
+        while(initialN <= 128000){
             Ns.addLast(initialN);
             Stopwatch sw = new Stopwatch();
             AList<Integer> tmp = new AList<>();
