@@ -139,6 +139,9 @@ public class ArrayDeque<T> implements Iterable<T>, Deque<T> {
 
     @Override
     public boolean equals(Object o) {
+        if (o == this) {
+            return true;
+        }
         if (o instanceof ArrayDeque) {
             ArrayDeque oAD  = (ArrayDeque)  o;
             if (oAD.size != this.size) {
