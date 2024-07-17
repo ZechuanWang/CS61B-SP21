@@ -1,10 +1,15 @@
 package deque;
+
+import jh61b.junit.In;
+
+import java.util.Iterator;
+
 /**Doubly linked list for all data types.
  * Firstly implemented based on supporting Integer, and then modify for all types
  * @author Zechuan Wang
  */
 
-public class LinkedListDeque<T> {
+public class LinkedListDeque<T> implements Iterable, Deque<T> {
     private int size;
     private Node sentinel;
 
@@ -35,13 +40,13 @@ public class LinkedListDeque<T> {
         return size;
     }
 
-    public boolean isEmpty(){
-        if (sentinel.pre == sentinel && sentinel.next == sentinel){
-            return true;
-        }else{
-            return false;
-        }
-    }
+//    public boolean isEmpty(){
+//        if (sentinel.pre == sentinel && sentinel.next == sentinel){
+//            return true;
+//        }else{
+//            return false;
+//        }
+//    }
 
     public void addFirst(T item){
         Node tmp = new Node(item, null, null);
@@ -104,7 +109,7 @@ public class LinkedListDeque<T> {
     }
 
     public T get(int index){
-        if(index > size - 1){
+        if(index > size - 1 || index < 0){
             return null;
         }
         int idx = 0;
@@ -123,11 +128,46 @@ public class LinkedListDeque<T> {
         return getHelper(p.next, index - 1);
     }
     public T getRecursive(int index){
-        if (index > size - 1){
+        if (index > size - 1 || index < 0){
             return null;
         }else{
             return getHelper(sentinel.next, index);
         }
+    }
+
+    /**Returns an iterator*/
+    public Iterator<T> iterator(){
+        return new LinkedListDequeIterator();
+    }
+    private class LinkedListDequeIterator implements Iterator<T>{
+        private int pos;
+        public LinkedListDequeIterator(){
+            pos = 0;
+        }
+        @Override
+        public boolean hasNext(){
+            return pos < size;
+        }
+        @Override
+        public T next(){
+            T returnItem = get(pos);
+            pos++;
+            return returnItem;
+        }
+    }
+
+    @Override
+    public boolean equals(Object o){
+        if(this == o) return true;
+        if(o instanceof LinkedListDeque){
+            LinkedListDeque oLLD  = (LinkedListDeque) o;
+            if (oLLD.size != this.size) return false;
+            for(int i = 0; i < this.size; i++){
+                if(!this.get(i).equals(oLLD.get(i))) return false;
+            }
+            return true;
+        }
+        return false;
     }
 
     public static void main(String[] args){
@@ -138,14 +178,11 @@ public class LinkedListDeque<T> {
         deque.addFirst(5);
         deque.addLast(15);
         deque.addLast(20);
-        System.out.println(deque.getRecursive(4));
-        System.out.println(deque.getRecursive(3));
-        System.out.println(deque.getRecursive(2));
-        System.out.println(deque.getRecursive(1));
-        System.out.println(deque.getRecursive(0));
-        deque.printDeque();
-        deque.removeFirst();
-        deque.removeLast();
-        deque.printDeque();
+        LinkedListDeque<Integer> tmp = new LinkedListDeque<>();
+        tmp.addFirst(10);
+        tmp.addFirst(5);
+        tmp.addLast(15);
+        tmp.addLast(20);
+        System.out.println(tmp.equals(deque));
     }
 }
