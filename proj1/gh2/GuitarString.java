@@ -1,8 +1,8 @@
 package gh2;
 
 
- import deque.ArrayDeque;
- import deque.Deque;
+import deque.ArrayDeque;
+import deque.Deque;
 
 
 //Note: This file will not compile until you complete the Deque implementations
@@ -20,7 +20,7 @@ public class GuitarString {
 
         buffer = new ArrayDeque<>();
         int capacity = (int) Math.round(SR / frequency);
-        for(int i = 0; i < capacity; i++){
+        for (int i = 0; i < capacity; i++) {
             buffer.addLast(0.0);
         }
 
@@ -30,7 +30,7 @@ public class GuitarString {
     /* Pluck the guitar string by replacing the buffer with white noise. */
     public void pluck() {
 
-        for (int i = 0; i < buffer.size(); i++){
+        for (int i = 0; i < buffer.size(); i++) {
             double r = Math.random() - 0.5;
             buffer.removeFirst();
             buffer.addLast(r);
