@@ -163,7 +163,7 @@ public class LinkedListDeque<T> implements Iterable<T>, Deque<T> {
                 return false;
             }
             for (int i = 0; i < this.size; i++) {
-                if (!this.get(i).equals(oLLD.get(i))) {
+                if (this.get(i) != oLLD.get(i)) {
                     return false;
                 }
             }
@@ -172,7 +172,7 @@ public class LinkedListDeque<T> implements Iterable<T>, Deque<T> {
         return false;
     }
 
-    private static void main(String[] args){
+    private static void main(String[] args) {
         LinkedListDeque<Integer> deque = new LinkedListDeque();
         System.out.println(deque.size());
         System.out.println(deque.isEmpty());
@@ -188,3 +188,4 @@ public class LinkedListDeque<T> implements Iterable<T>, Deque<T> {
         System.out.println(tmp.equals(deque));
     }
 }
+
