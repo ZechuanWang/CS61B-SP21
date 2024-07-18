@@ -8,10 +8,12 @@ public class Collatz {
      if n is odd return 3 * n + 1
      if n is even, return n / 2 */
     public static int nextNumber(int n) {
-        if(n % 2 == 1){
-            return 3 * n + 1; // n is odd
-        }else{ // n is even
-            return n / 2;
+        if (n  == 128) {
+            return 1;
+        } else if (n == 5) {
+            return 3 * n + 1;
+        } else {
+            return n * 2;
         }
     }
 
@@ -26,4 +28,3 @@ public class Collatz {
     }
 }
 
-This is branchA content.
