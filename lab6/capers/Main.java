@@ -1,6 +1,10 @@
 package capers;
 
+import edu.princeton.cs.algs4.StdOut;
+import jdk.swing.interop.SwingInterOpUtils;
+
 import java.io.File;
+import java.util.Arrays;
 
 import static capers.Utils.*;
 
@@ -40,7 +44,7 @@ public class Main {
         if (args.length == 0) {
             Utils.exitWithError("Must have at least one argument");
         }
-
+        System.out.println("args: " + Arrays.toString(args));
         CapersRepository.setupPersistence();
         String text;
         switch (args[0]) {
