@@ -3,7 +3,6 @@ package bstmap;
 import java.util.Iterator;
 import java.util.Set;
 
-import afu.org.checkerframework.checker.oigj.qual.O;
 
 /** A data structure that uses a binary search tree to store pairs of keys and values.
  *  Any key must appear at most once in the dictionary, but values may appear multiple
@@ -138,13 +137,5 @@ public class BSTMap<K extends Comparable<K>, V> implements Map61B<K, V> {
         throw new UnsupportedOperationException("Unsupport iterator operation");
     }
 
-    public static void main(String[] args){
-        BSTMap<Integer, Integer> b = new BSTMap<>();
-        b.put(2, 1);
-        b.put(3, 1);
-        b.put(1, 1);
-        System.out.println(b.size());
-        b.clear();
-        System.out.println(b.size());
-    }
+   
 }
