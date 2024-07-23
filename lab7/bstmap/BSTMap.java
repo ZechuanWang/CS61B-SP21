@@ -1,5 +1,6 @@
 package bstmap;
 
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
@@ -30,7 +31,6 @@ public class BSTMap<K extends Comparable<K>, V> implements Map61B<K, V> {
     public BSTMap() {
 
     }
-
 
     @Override
     public void clear() {
@@ -117,25 +117,97 @@ public class BSTMap<K extends Comparable<K>, V> implements Map61B<K, V> {
         }
         root = put(root, key, value);
     }
+    public void printInOrder(){
+        printInOrder(root);
+    }
 
+    private void printInOrder(Node root){
+        if (root == null) {
+            return;
+        }
+        printInOrder(root.left);
+        System.out.println(root.key.toString() + " -> " + root.val.toString());
+        printInOrder(root.right);
+    }
+
+    private void keySet(Node root, Set<K> set){
+        if (root == null) {
+            return;
+        }
+        set.add(root.key);
+        keySet(root.left, set);
+        keySet(root.right, set);
+    }
     @Override
     public Set<K> keySet() {
-        throw new UnsupportedOperationException("Unsupport KeySet operation");
+        Set<K> set = new HashSet<>();
+        keySet(root, set);
+        return set;
     }
 
     @Override
     public V remove(K key) {
-        throw new UnsupportedOperationException("Unsupport remove operation");
+        if (!containsKey(key)) {
+            return null;
+        }
+        V val = get(key);
+        root = remove(root, key);
+        return val;
+    }
+    private Node remove(Node root, K key){
+        if (root == null) {
+            return null;
+        }
+        int cmp = key.compareTo(root.key);
+        if (cmp < 0) {
+            root.left = remove(root.left, key);
+        } else if (cmp > 0) {
+            root.right = remove(root.right, key);
+        } else {
+            if (root.right == null) {
+                return root.left;
+            }
+            if (root.left == null) {
+                return root.right;
+            }
+            Node tmp = root;
+            root = findMinInRight(root.right);
+            root.right = deleteMin(tmp.right);
+            root.left = tmp.left;
+        }
+        root.size = size(root.left) + size(root.right) + 1;
+        return root;
+    }
+
+    private Node findMinInRight(Node root){
+        if (root.left == null) {
+            return root;
+        }
+        return findMinInRight(root.left);
+    }
+    private Node deleteMin(Node x) {
+        if (x.left == null) return x.right;
+        x.left = deleteMin(x.left);
+        x.size = size(x.left) + size(x.right) + 1;
+        return x;
     }
 
     @Override
     public  V remove(K key, V value) {
-        throw new UnsupportedOperationException("Unsupport remove operation");
+        if (!containsKey(key)) {
+            return null;
+        }
+        V val = get(key);
+        if (val != value) {
+            return val;
+        }
+        root = remove(root, key);
+        return val;
     }
 
     public Iterator<K> iterator() {
-        throw new UnsupportedOperationException("Unsupport iterator operation");
+        return keySet().iterator();
     }
 
-   
+
 }
