@@ -2,6 +2,7 @@ package gitlet;
 
 
 
+
 import java.io.File;
 import java.io.Serializable;
 import java.text.DateFormat;
@@ -42,6 +43,7 @@ public class Commit implements Serializable {
 
 
     /* TODO: fill in the rest of this class. */
+    /**Initial constructor*/
     public Commit() {
         this.commitMessage = "initial commit";
         this.curTime = new Date(0);
@@ -51,6 +53,19 @@ public class Commit implements Serializable {
         fileNameToBlobID = new TreeMap<>();
         commitID = generateCommitID();
 
+    }
+
+    /**Commit constructor*/
+    public Commit(String message, String firstparentCommitID, String secondParentID) {
+        this.commitMessage = message;
+        this.curTime = new Date();
+        this.timeStamp = Commit.dateToTimeStamp(curTime);
+        this.firstParentID = firstparentCommitID;
+        this.secondParentID = secondParentID;
+        Commit parent = Commit.load(firstparentCommitID);
+        this.fileNameToBlobID = new TreeMap<>();
+        fileNameToBlobID.putAll(parent.getFileNameToBlobIDMap());
+        this.commitID = generateCommitID();
     }
 
     /**Returns commit message. */
@@ -77,6 +92,7 @@ public class Commit implements Serializable {
     public String getCommitID() {
         return commitID;
     }
+
     /**Returns the first parent commit id. */
     public String getFirstParentID() {
         return this.firstParentID;
@@ -113,11 +129,26 @@ public class Commit implements Serializable {
        }
     }
 
-    /**Returns the file to blob id mapping. */
-    public Map<String, String> getFileNameToBlobID() {
+    /**Returns the file to blobs map*/
+    public Map<String, String> getFileNameToBlobIDMap() {
         return this.fileNameToBlobID;
     }
 
+    /**Returns the file to blob id mapping. */
+    public String getBlobID(String fileName) {
+        return this.fileNameToBlobID.get(fileName);
+    }
+
+    /**Prints out the Commit Object. */
+    @Override
+    public String toString() {
+        String s = "===\n";
+        String commit = "commit " + this.commitID + "\n";
+        String date = "Date: " + this.timeStamp + "\n";
+        String message = this.commitMessage + "\n";
+        return s + commit + date + message;
+
+    }
 
     public static void main(String[] args){
         Commit tmp = new Commit();

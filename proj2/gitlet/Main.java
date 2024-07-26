@@ -1,7 +1,7 @@
 package gitlet;
 
 /** Driver class for Gitlet, a subset of the Git version-control system.
- *  @author TODO
+ *  @author Zechuan Wang
  */
 public class Main {
 
@@ -29,7 +29,40 @@ public class Main {
                 Repository.add(args[1]);
                 break;
             // TODO: FILL THE REST IN
-
+            case "commit":
+                checkGitletInitialized();
+                validateNumArgs(args, 2);
+                Repository.commit(args[1]);
+                break;
+            case "rm":
+                checkGitletInitialized();
+                validateNumArgs(args, 2);
+                Repository.rm(args[1]);
+                break;
+            case "log":
+                checkGitletInitialized();
+                validateNumArgs(args, 1);
+                Repository.log();
+                break;
+            case "global-log":
+                checkGitletInitialized();
+                validateNumArgs(args, 1);
+                Repository.global_log();
+                break;
+            case "find":
+                checkGitletInitialized();
+                validateNumArgs(args, 2);
+                Repository.find(args[1]);
+                break;
+            case "status":
+                checkGitletInitialized();
+                validateNumArgs(args, 1);
+                Repository.status();
+                break;
+            case "checkout":
+                checkGitletInitialized();
+                Repository.checkout(args);
+                break;
             default:
                 System.out.println("No command with that name exists.");
                 System.exit(0);

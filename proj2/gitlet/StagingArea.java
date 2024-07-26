@@ -9,6 +9,7 @@ public class StagingArea implements Serializable {
 
     public static final File STAGEAREA = Utils.join(Repository.GITLET_DIR, "stage");
 
+    /**file name to blob id mapping. */
     private Map<String, String> addition;
 
     private Map<String, String> removal;
@@ -18,9 +19,6 @@ public class StagingArea implements Serializable {
         removal = new HashMap<>();
     }
 
-    public Map<String, String> getFileToBlobID() {
-        return addition;
-    }
 
     public static StagingArea load() {
         return Utils.readObject(STAGEAREA, StagingArea.class);
@@ -35,8 +33,13 @@ public class StagingArea implements Serializable {
         return addition;
     }
 
+    public Map<String, String> getRemoval() {
+        return removal;
+    }
+
     public void clear() {
         addition.clear();
+        removal.clear();
     }
 
 }
