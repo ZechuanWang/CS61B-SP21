@@ -99,7 +99,7 @@ public class Commit implements Serializable {
     }
 
     /**Returns the second parent commit id. */
-    public String getSecondParent() {
+    public String getSecondParentID() {
         return this.secondParentID;
     }
 
@@ -150,12 +150,5 @@ public class Commit implements Serializable {
 
     }
 
-    public static void main(String[] args){
-        Commit tmp = new Commit();
-        System.out.println(tmp.curTime);
 
-        System.out.println(Commit.dateToTimeStamp(tmp.curTime));
-
-        System.out.println(tmp.getCommitID());
-    }
 }

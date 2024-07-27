@@ -19,6 +19,11 @@ public class Blob implements Serializable {
         blobId = calculateHashCode();
     }
 
+    public Blob(byte[] contents) {
+        this.fileContents = contents;
+        this.blobId = calculateHashCode();
+    }
+
     /**Calculate the sha-1 hash code foe the file contents. */
     private String calculateHashCode() {
         return Utils.sha1((Object) fileContents);

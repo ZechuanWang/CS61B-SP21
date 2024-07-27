@@ -1,6 +1,7 @@
 package gitlet;
 
 import java.io.File;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 import static gitlet.Utils.*;
@@ -368,5 +369,205 @@ public class Repository {
 
     }
 
+    public static void branch(String branchName) {
+        if (Utils.join(Branch.BRANCHES, branchName).exists()) {
+            System.out.println("A branch with that name already exists.");
+            System.exit(0);
+        }
+        String commitID = Branch.getCommitID(HEAD.getHead());
+        Branch.setCommitID(branchName, commitID);
+    }
 
+    public static void rmBranch(String branchName) {
+        File branchFile = Utils.join(Branch.BRANCHES, branchName);
+        if (!branchFile.exists()) {
+            System.out.println("A branch with that name does not exist.");
+            System.exit(0);
+        }
+        if (branchName.equals(HEAD.getHead())) {
+            System.out.println("Cannot remove the current branch.");
+            System.exit(0);
+        }
+        branchFile.delete();
+    }
+
+    public static void reset(String commitID) {
+        Commit commit = Commit.load(commitID);
+        if (commit == null) {
+            System.out.println("No commit with that id exists.");
+            System.exit(0);
+        }
+        checkoutCommit(commit);
+        Branch.setCommitID(HEAD.getHead(), commit.getCommitID());
+    }
+
+    public static void merge(String branchName) {
+        StagingArea stagingArea = StagingArea.load();
+        if (!stagingArea.getAddition().isEmpty() || !stagingArea.getRemoval().isEmpty()) { //failure case 1
+            System.out.println("You have uncommitted changes.");
+            System.exit(0);
+        }
+        String mergeCommitID = Branch.getCommitID(branchName);
+        if (mergeCommitID == null) { //failure case 2
+            System.out.println("A branch with that name does not exist.");
+            System.exit(0);
+        }
+        if (HEAD.getHead().equals(branchName)) { //failure case 3
+            System.out.println("Cannot merge a branch with itself.");
+            System.exit(0);
+        }
+        Commit mergeCommit = Commit.load(mergeCommitID);
+        assert mergeCommit != null;
+        String curCommitID = Branch.getCommitID(HEAD.getHead());
+        assert curCommitID != null;
+        Commit curCommit = Commit.load(curCommitID);
+        assert curCommit != null;
+        List<String> curWorkingDirFiles = Utils.plainFilenamesIn(CWD);
+        assert curWorkingDirFiles != null;
+        List<String> unTrackedFiles = unTrackedFiles(stagingArea, curCommit, curWorkingDirFiles);
+        if (!unTrackedFiles.isEmpty()) {
+            for (String unTrackedFile : unTrackedFiles) {
+                if (mergeCommit.getFileNameToBlobIDMap().containsKey(unTrackedFile)) {
+                    System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
+                    System.exit(0);
+                }
+            }
+        }
+        String splitPointCommitID = getSplitPointCommitID(curCommitID, mergeCommitID);
+        if (mergeCommitID.equals(splitPointCommitID)) {
+            System.out.println("Given branch is an ancestor of the current branch.");
+            System.exit(0);
+        }
+        if (curCommitID.equals(splitPointCommitID)) {
+            checkoutCommit(mergeCommit);
+            Branch.setCommitID(HEAD.getHead(), mergeCommitID);
+            System.out.println("Current branch fast-forwarded.");
+            System.exit(0);
+        }
+        Commit splitPointCommit = Commit.load(splitPointCommitID);
+        assert splitPointCommit != null;
+
+    }
+    private static String getSplitPointCommitID(String curCommitID, String mergeCommitID) {
+        Set<String> commitSet = new HashSet<>();
+        Queue<String> que = new ArrayDeque<>();
+        que.add(curCommitID);
+        while (!que.isEmpty()) {
+            String commitID = que.remove();
+            Commit commit = Commit.load(commitID);
+            if (commit.getFirstParentID() != null) {
+                que.add(commit.getFirstParentID());
+            }
+            if (commit.getSecondParentID() != null) {
+                que.add(commit.getSecondParentID());
+            }
+        }
+        que.add(mergeCommitID);
+        while (!que.isEmpty()) {
+            String commitID = que.remove();
+            Commit commit = Commit.load(commitID);
+            if (commitSet.contains(commitID)) {
+                return commitID;
+            }
+            if (commit.getFirstParentID() != null) {
+                que.add(commit.getFirstParentID());
+            }
+            if (commit.getSecondParentID() != null) {
+                que.add(commit.getSecondParentID());
+            }
+        }
+        return null;
+    }
+    private static boolean processMerge(StagingArea stagingArea, Commit splitPointCommit, Commit curCommit, Commit mergeCommit) {
+        boolean conflict = false;
+        Map<String, String> splitBlobs = splitPointCommit.getFileNameToBlobIDMap();
+        Map<String, String> curBlobs = curCommit.getFileNameToBlobIDMap();
+        Map<String, String> mergeBlobs = mergeCommit.getFileNameToBlobIDMap();
+        for (String fileName : mergeBlobs.keySet()) {
+            String mergeBlobID = mergeBlobs.get(fileName);
+            String splitBlobID = splitBlobs.get(fileName);
+            String curBlobID = curBlobs.get(fileName);
+            //Situation 1 : Any files that have been modified in the given branch since the split point,
+            // but not modified in the current branch since the split point should be changed to their versions in the given branch
+            if (splitBlobID != null && !mergeBlobID.equals(splitBlobID)) {
+                if (splitBlobID.equals(curBlobID)) {
+                    checkoutFile(mergeCommit.getCommitID(), fileName);
+                    stagingArea.getAddition().put(fileName, mergeBlobID);
+                    continue;
+                }
+            }
+            //Situation 5 : Any files that were not present at the split point and
+            //are present only in the given branch should be checked out and staged.
+            if (splitBlobID == null && curBlobID == null) {
+                checkoutFile(mergeCommit.getCommitID(), fileName);
+                stagingArea.getAddition().put(fileName, mergeBlobID);
+                continue;
+            }
+            //Situation 8 :the contents of one are changed and the other file is deleted
+            if (splitBlobID != null && !mergeBlobID.equals(splitBlobID) && curBlobID == null) {
+                conflict = true;
+                processConflict(stagingArea, fileName, curBlobID, mergeBlobID);
+            }
+
+        }
+        for (String fileName : curBlobs.keySet()) {
+            String curBlobID = curBlobs.get(fileName);
+            String splitBlobID = splitBlobs.get(fileName);
+            String mergeBlobID = mergeBlobs.get(fileName);
+            //Situation 6 :Any files present at the split point, unmodified in the current branch,
+            // and absent in the given branch should be removed
+            if (curBlobID.equals(splitBlobID)) {
+                if (mergeBlobID == null) {
+                    Utils.join(CWD, fileName).delete();
+                    stagingArea.getRemoval().put(fileName, curBlobID);
+                    continue;
+                }
+            }
+            //Situation 8 : he contents of both are changed and different from other
+            if (splitBlobID != null && mergeBlobID != null) {
+                if (!curBlobID.equals(splitBlobID) && !mergeBlobID.equals(splitBlobID)) {
+                    if (!curBlobID.equals(mergeBlobID)) {
+                        conflict = true;
+                        processConflict(stagingArea, fileName, curBlobID, mergeBlobID);
+                    }
+                }
+            }
+            //Situation 8 :the contents of one are changed and the other file is deleted
+            if (splitBlobID != null && !curBlobID.equals(splitBlobID) && mergeBlobID == null) {
+                conflict = true;
+                processConflict(stagingArea, fileName, curBlobID, mergeBlobID);
+            }
+            //Situation 8 : the file was absent at the split point and has different contents in the given and current branches
+            if (splitBlobID == null && curBlobID != null && mergeBlobID != null) {
+                if (!curBlobID.equals(mergeBlobID)) {
+                    conflict = true;
+                    processConflict(stagingArea, fileName, curBlobID, mergeBlobID);
+                }
+            }
+        }
+        return conflict;
+    }
+    private static void processConflict(StagingArea stagingArea, String fileName, String curBlobID, String mergeBlobID) {
+        String newContens = conflictFileContents(curBlobID, mergeBlobID);
+        Blob newBlob = new Blob(newContens.getBytes(StandardCharsets.UTF_8));
+        newBlob.save();
+        File file = Utils.join(CWD, fileName);
+        Utils.writeContents(file, newContens);
+        stagingArea.getAddition().put(fileName, newBlob.getBlobId());
+    }
+    private static String conflictFileContents(String curBlobID, String mergeBlobID) {
+        String curContents;
+        String mergeContents;
+        if (curBlobID == null) {
+            curContents = "";
+        } else {
+            curContents = Utils.readContentsAsString(Utils.join(Blob.BLOBS, curBlobID));
+        }
+        if (mergeBlobID == null) {
+            mergeContents = "";
+        } else {
+            mergeContents = Utils.readContentsAsString(Utils.join(Blob.BLOBS, mergeBlobID));
+        }
+        return "<<<<<<< HEAD\n" + curContents + "=======\n" + mergeContents + ">>>>>>>\n";
+    }
 }

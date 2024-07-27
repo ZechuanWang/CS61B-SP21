@@ -63,6 +63,26 @@ public class Main {
                 checkGitletInitialized();
                 Repository.checkout(args);
                 break;
+            case "branch":
+                checkGitletInitialized();
+                validateNumArgs(args, 2);
+                Repository.branch(args[1]);
+                break;
+            case "rm-branch":
+                checkGitletInitialized();
+                validateNumArgs(args, 2);
+                Repository.rmBranch(args[1]);
+                break;
+            case "reset":
+                checkGitletInitialized();
+                validateNumArgs(args, 2);
+                Repository.reset(args[1]);
+                break;
+            case "merge":
+                checkGitletInitialized();
+                validateNumArgs(args, 2);
+                Repository.merge(args[1]);
+                break;
             default:
                 System.out.println("No command with that name exists.");
                 System.exit(0);
